@@ -1,0 +1,43 @@
+/* Dark mode colors. */
+:root {
+	--sl-color-accent-low: #002544;
+	--sl-color-accent: #BCDB4A;
+	--sl-color-accent-high: #1EB8FF;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #eceef2;
+	--sl-color-gray-2: #c0c2c7;
+	--sl-color-gray-3: #888b96;
+	--sl-color-gray-4: #545861;
+	--sl-color-gray-5: #353841;
+	--sl-color-gray-6: #24272f;
+	--sl-color-black: #17181c;
+  --sl-color-table-row-even: #191A1E;
+  --sl-color-table-row-hover: #172027;
+}
+/* Light mode colors. */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #b8dbff;
+	--sl-color-accent: #1EB8FF;
+	--sl-color-accent-high: #BCDB4A;
+	--sl-color-white: #17181c;
+	--sl-color-gray-1: #24272f;
+	--sl-color-gray-2: #353841;
+	--sl-color-gray-3: #545861;
+	--sl-color-gray-4: #888b96;
+	--sl-color-gray-5: #c0c2c7;
+	--sl-color-gray-6: #eceef2;
+	--sl-color-gray-7: #f5f6f8;
+	--sl-color-black: #ffffff;
+  --sl-color-table-row-even: #FAFAFA;
+  --sl-color-table-row-hover: #E9F8FF;
+}
+
+/* Target Starlight's table rows */
+.sl-markdown-content table tr:nth-child(even) {
+  background-color: var(--sl-color-table-row-even);
+}
+
+.sl-markdown-content table tr:hover {
+  background-color: var(--sl-color-table-row-hover);
+}
+

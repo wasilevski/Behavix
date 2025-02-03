@@ -1,0 +1,208 @@
+---
+title: App Session Data Feed
+description: Showing Behavix app session data feed
+---
+import { Code } from 'astro-expressive-code/components'
+import { Image } from 'astro:assets';
+import asEvents from '/Users/VladimirVas/Library/Mobile Documents/com~apple~CloudDocs/Documents/DEV/Behavix/src/assets/Images/as_events.png';
+import asDAU from '/Users/VladimirVas/Library/Mobile Documents/com~apple~CloudDocs/Documents/DEV/Behavix/src/assets/Images/as_dau.png';
+import asMAU from '/Users/VladimirVas/Library/Mobile Documents/com~apple~CloudDocs/Documents/DEV/Behavix/src/assets/Images/as_mau.png';
+import asRetention from '/Users/VladimirVas/Library/Mobile Documents/com~apple~CloudDocs/Documents/DEV/Behavix/src/assets/Images/as_retention.png';
+
+# Sample data
+
+- [1000 rows](https://docs.behavix.io/public-samples/app_sessions_sample.csv) (CSV, 223KB)
+- [4 days](https://docs.behavix.io/public-samples/app_sessions_sample.parquet) (2023 (2023-04-03, 2023-04-04, 2023-10-02, 2023-10-03, Parquet, 2.3 GB)
+
+# Schema
+
+The content container is a bit narrow for this kind of table.
+
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| event_id | string | Unique identifier for the event | “5b751bb5ee7e266eb93b8850269240b21cf3e28e” |
+| user_id | string | Unique identifier for the user | “6dfed19c-cdfb-4b9a-9e63-ca309f97118b” |
+| app_id | string | Application id | “com.snapchat.android” |
+| app_name | String | Name of the application | “Snapchat” |
+| category | String | Category of the application | “Communication” |
+| event_time | String | Event timestamp, UTC | “2024-05-06T10:20:00Z” |
+| event_time_local | Timestamp | Event timestamp, local time of the user | “2024-05-05T13:25:00Z” |
+| duration | Integer | Duration of the session in seconds | 120 |
+| session_start_time | Timestamp | Time of app_sessions start (UTC) |  |
+| device_type | String | Device | “Mobile” |
+| manufacturer | String | Device manufacturer | “Samsung” |
+| model | String | Device model | “Galaxy S21” |
+| os_name | String | Operating system name | “Android” |
+| os_version | String | Operating system version | "11" |
+| city | String | City of the user | “New York” |
+| state | String | State of the user | “New York” |
+| country | String | Country of the user | “United States” |
+
+# Behavix taxonomy for apps
+
+Interesting problem here, the table does not fill the container.
+
+| Category |
+|-------|
+| Adult Content |
+| Category |
+|----------|
+| Art and Design |
+| Auto and Vehicles |
+| Beauty |
+| Books and Reference |
+| Business |
+| Comics |
+| Communication |
+| Dating |
+| Education |
+| Entertainment |
+| Events |
+| Finance |
+| Food and Drink |
+| Game - Action |
+| Game - Adventure |
+| Game - Arcade |
+| Game - Board |
+| Game - Card |
+| Game - Casino |
+| Game - Casual |
+| Game - Educational |
+| Game - Music |
+| Game - Puzzle |
+| Game - Racing |
+| Game - Role Playing |
+| Game - Simulation |
+| Game - Sports |
+| Game - Strategy |
+| Game - Trivia |
+| Game - Word |
+| Health and Fitness |
+| House and Home |
+| Libraries and Demo |
+| Lifestyle |
+| Maps and Navigation |
+| Medical |
+| Music and Audio |
+| News and Magazines |
+| Parenting |
+| Personalization |
+| Photography |
+| Productivity |
+| Reference |
+| Search |
+| Sensitive Topic |
+| Shopping |
+| Social |
+| Sports |
+| Tools |
+| Travel and Local |
+| Video Players and Editors |
+| Weather |
+
+We can also provide app sessions data feed with IAB Content Taxonomy 3.0 and/or your in-house custom taxonomy.
+
+# Example queries
+All example queries are written in Trino SQL and are compatible with AWS Athena The syntax in your preferred SQL dialect may differ.
+
+#### App categories ranked by unique user count
+ <Code code="SELECT
+  category,
+  COUNT(DISTINCT user_id) AS unique_user_count
+FROM app_sessions
+GROUP BY category
+ORDER BY unique_user_count DESC" lang="js" />
+
+#### App categories ranked by time spent
+ <Code code="SELECT
+  category,
+  ROUND(SUM(duration) / (60.0 * 60.0)) AS time_spent_hours
+FROM app_sessions
+GROUP BY category
+ORDER BY time_spent_hours DESC" lang="js" />
+
+#### Top 5 apps by time spent per category and operating system
+ 
+ <Code code="WITH apps AS (
+    SELECT
+      category,
+      app_name,
+      os_name,
+      ROUND(SUM(duration) / (60.0 * 60.0)) as time_spent_hours,
+      ROW_NUMBER() OVER (
+      PARTITION BY category, os_name
+      ORDER BY SUM(duration) DESC) AS rank
+    FROM app_sessions
+    GROUP BY
+      category,
+      app_name,
+      os_name
+  )
+  SELECT * FROM apps
+  WHERE rank <= 5
+  ORDER BY category, os_name, rank" lang="js" />
+
+#### Top 5 apps by unique user count per category and operating system
+ <Code code="WITH apps AS (
+  SELECT
+    user_id,
+    category,
+    app_name,
+    os_name
+  FROM app_sessions
+),
+
+app_user_counts AS (
+  SELECT
+    category,
+    app_name,
+    os_name,
+    COUNT(DISTINCT user_id) as unique_user_count
+  FROM apps
+  GROUP BY
+    category,
+    app_name,
+    os_name
+),
+
+os_user_counts AS (
+  SELECT
+    os_name,
+    COUNT(DISTINCT user_id) as total_users
+  FROM apps
+  GROUP BY os_name
+),
+
+ranked_apps AS (
+    SELECT
+      category,
+      app_name,
+      os_name,
+      unique_user_count,
+      100 * CAST(unique_user_count AS DOUBLE) / os_user_counts.total_users AS share_or_all_users,
+      ROW_NUMBER() OVER (
+        PARTITION BY category, os_name
+        ORDER BY unique_user_count DESC) AS rank
+    FROM app_user_counts
+    JOIN os_user_counts USING(os_name)
+  )
+
+  SELECT * FROM ranked_apps
+  WHERE rank <= 5
+  ORDER BY category, os_name, rank;" lang="js" />
+
+# Key Performance Indicators
+The following diagrams present the combined KPIs of across all Behavix Data Feeds. The KPIs are calculated from the sample data set that only contains active users. The active users definition in this data set is at least 7 active days in a month. If you are interested in different sampling criteria please contact sales.
+
+For combined KPIs across all data feeds see [here](https://docs.behavix.io/datafeed/) .
+<Image src={ asEvents } alt="A description of my image." />
+
+#### Daily active users
+<Image src={ asDAU } alt="A description of my image." />
+
+#### Monthly active users
+<Image src={ asMAU } alt="A description of my image." />
+
+#### Monthly retention
+Share of users who have been active this month and the previous month.
+<Image src={ asRetention } alt="A description of my image." />

@@ -1,0 +1,42 @@
+---
+title: MDX Example
+description: Showing MDX features
+---
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+
+# Components
+
+Aside, for secondary information alongside a page’s main content: 
+<Aside>Some content in an aside note.</Aside>
+<Aside type="caution">Some cautionary content.</Aside>
+<Aside type="tip">
+</Aside>
+
+<Aside type="danger">Do not give your password to anyone.</Aside>
+
+You can use normal markdown **bold** and *italic*
+
+And also use components:
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install my-package
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add my-package
+    ```
+  </TabItem>
+</Tabs> 
+
+# Cards
+
+<Card title="Check Behavix" icon ="star">
+Interesting content you want to highlight.
+</Card>
+
+
